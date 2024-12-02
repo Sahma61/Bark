@@ -1,5 +1,4 @@
 import os
-import requests
 from tabulate import tabulate
 
 import commands
@@ -55,21 +54,8 @@ def get_bookmark_id_for_deletion():
 def get_import_stars_from_github_data():
     username = get_user_input('GitHub username')
     preserve_timestamp = get_user_input('Preserve timestamps [y/n]', False)
-    preserve_timestamp = True if preserve_timestamp == 'y' else False
-    resp = requests.get(
-        f'https://api.github.com/users/{username}/starred',
-        headers={'Accept': 'application/vnd.github.v3.start+json'}
-    )
-    data = []
-    for star in resp.json():
-        data.append({
-            'title': star['name'],
-            'url': star['git_url'],
-            'notes': star['description'] if star['description'] else 'NA',
-        })
-        if preserve_timestamp:
-            data[-1]['date_added'] = star['created_at']
-    return data
+    preserve_timestamp = True if preserve_timestamp in ('y', 'Y') else False
+    return {'username': username, 'preserve_timestamp': preserve_timestamp}
 
 
 if __name__ == "__main__":
@@ -92,4 +78,5 @@ if __name__ == "__main__":
     print_options(options)
     chosen_option = get_option_choice(options)
     clear_screen()
+    commands.CreateBookmarksTableCommand().execute()
     chosen_option.choose()

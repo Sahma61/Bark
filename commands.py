@@ -1,4 +1,5 @@
 import sys
+import requests
 from datetime import datetime
 
 from databasemanager import DatabaseManager
@@ -45,8 +46,32 @@ class QuitCommand:
 
 
 class ImportGithubStarsCommand:
+    def _extract_bookmark_info(self, repo):
+        return {
+            'title': repo['name'],
+            'url': repo['html_url'],
+            'notes': repo['description'] if repo['description'] else 'NA'
+        }
+
     def execute(self, data):
-        cnt = len(data)
-        for row in data:
-            AddBookmarkCommand().execute(row)
+        username = data['username']
+        preserve_timestamp = data['preserve_timestamp']
+
+        resp = requests.get(
+            f'https://api.github.com/users/{username}/starred',
+            headers={'Accept': 'application/vnd.github.v3.star+json'}
+        )
+
+        cnt = 0
+
+        for star_info in resp.json():
+            bookmark = self. _extract_bookmark_info(star_info['repo'])
+            if preserve_timestamp:
+                bookmark['date_added'] = datetime.strptime(
+                    star_info['starred_at'],
+                    "%Y-%m-%dT%H:%M:%SZ"
+                )
+            AddBookmarkCommand().execute(bookmark)
+            cnt += 1
+
         return f'Imported {cnt} bookmarks from starred repos!'
