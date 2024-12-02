@@ -19,7 +19,8 @@ class CreateBookmarksTableCommand:
 
 class AddBookmarkCommand:
     def execute(self, data):
-        data['date_added'] = datetime.utcnow().isoformat()
+        if 'date_added' not in data:
+            data['date_added'] = datetime.utcnow().isoformat()
         db.add('bookmarks', data)
         return 'Bookmark added!'
 
@@ -41,3 +42,11 @@ class ListBookmarksCommand:
 class QuitCommand:
     def execute(self):
         sys.exit(0)
+
+
+class ImportGithubStarsCommand:
+    def execute(self, data):
+        cnt = len(data)
+        for row in data:
+            AddBookmarkCommand().execute(row)
+        return f'Imported {cnt} bookmarks from starred repos!'

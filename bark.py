@@ -1,4 +1,5 @@
 import os
+import requests
 from tabulate import tabulate
 
 import commands
@@ -13,6 +14,7 @@ def clear_screen():
 def print_table(table):
     headers = ['ID', 'Title', 'URL', 'Notes', 'Date_added']
     return tabulate(table, headers=headers, tablefmt="psql")
+
 
 def print_options(options):
     for shortcut, option in options.items():
@@ -47,7 +49,27 @@ def get_add_bookmark_data():
 
 
 def get_bookmark_id_for_deletion():
-    return get_user_input('Enter a bookmark id to delete: ')
+    return get_user_input('Enter a bookmark id to delete')
+
+
+def get_import_stars_from_github_data():
+    username = get_user_input('GitHub username')
+    preserve_timestamp = get_user_input('Preserve timestamps [y/n]', False)
+    preserve_timestamp = True if preserve_timestamp == 'y' else False
+    resp = requests.get(
+        f'https://api.github.com/users/{username}/starred',
+        headers={'Accept': 'application/vnd.github.v3.start+json'}
+    )
+    data = []
+    for star in resp.json():
+        data.append({
+            'title': star['name'],
+            'url': star['git_url'],
+            'notes': star['description'] if star['description'] else 'NA',
+        })
+        if preserve_timestamp:
+            data[-1]['date_added'] = star['created_at']
+    return data
 
 
 if __name__ == "__main__":
@@ -62,7 +84,9 @@ if __name__ == "__main__":
                     printer=print_table),
         'D': Option('Delete a bookmark', commands.DeleteBookmarkCommand(),
                     get_bookmark_id_for_deletion),
-        'Q': Option('Quit', commands.QuitCommand())
+        'Q': Option('Quit', commands.QuitCommand()),
+        'G': Option('Import Github Stars', commands.ImportGithubStarsCommand(),
+                    get_import_stars_from_github_data)
     }
     clear_screen()
     print_options(options)
