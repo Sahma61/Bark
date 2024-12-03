@@ -4,6 +4,8 @@ from tabulate import tabulate
 import commands
 from option import Option
 
+headers = ['ID', 'Title', 'URL', 'Notes', 'Date_added']
+
 
 def clear_screen():
     clear = 'cls' if os.name == 'nt' else 'clear'
@@ -11,7 +13,6 @@ def clear_screen():
 
 
 def print_table(table):
-    headers = ['ID', 'Title', 'URL', 'Notes', 'Date_added']
     return tabulate(table, headers=headers, tablefmt="psql")
 
 
@@ -51,6 +52,16 @@ def get_bookmark_id_for_deletion():
     return get_user_input('Enter a bookmark id to delete')
 
 
+def get_bookmark_data_for_update():
+    id = get_user_input('Enter a bookmark id to update')
+    while (
+        column_name := get_user_input(f'column name ({headers})')
+    ) not in headers:
+        print(f'column name {column_name} not found')
+    column_value = get_user_input(f'{column_name}')
+    return {'id': id, 'values': {column_name: column_value}}
+
+
 def get_import_stars_from_github_data():
     username = get_user_input('GitHub username')
     preserve_timestamp = get_user_input('Preserve timestamps [y/n]', False)
@@ -72,7 +83,9 @@ if __name__ == "__main__":
                     get_bookmark_id_for_deletion),
         'Q': Option('Quit', commands.QuitCommand()),
         'G': Option('Import Github Stars', commands.ImportGithubStarsCommand(),
-                    get_import_stars_from_github_data)
+                    get_import_stars_from_github_data),
+        'E': Option('Edit a bookmark', commands.EditBookmarkCommand(),
+                    get_bookmark_data_for_update)
     }
     clear_screen()
     print_options(options)

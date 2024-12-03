@@ -29,7 +29,13 @@ class AddBookmarkCommand:
 class DeleteBookmarkCommand:
     def execute(self, id):
         db.delete('bookmarks', {'id': id})
-        return 'bookmark Deleted!'
+        return 'Bookmark Deleted!'
+
+
+class EditBookmarkCommand:
+    def execute(self, data):
+        db.update('bookmarks', {'id': data['id']}, data['values'])
+        return 'Bookmark Updated!'
 
 
 class ListBookmarksCommand:

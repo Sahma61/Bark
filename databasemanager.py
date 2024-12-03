@@ -1,7 +1,7 @@
 """DatabaseManager Class."""
 
 import sqlite3
-from typing import List, Tuple, Dict, Any
+from typing import Tuple, Dict, Any
 
 
 class DatabaseManager:
@@ -56,6 +56,21 @@ class DatabaseManager:
         criteria_values = tuple(criteria.values())
         statement = f"""DELETE FROM {table_name} WHERE {delete_criteria}"""
         self._execute(statement, criteria_values)
+
+    def update(self,
+               table_name: str,
+               criteria: Dict[str, Any],
+               values: Dict[str, Any]) -> None:
+        """Update record/records from the table."""
+        placeholders = [f"{column} = ?" for column in criteria.keys()]
+        update_criteria = " AND ".join(placeholders)
+        criteria_values = tuple(criteria.values())
+        placeholders = [f"{column} = ?" for column in values.keys()]
+        updates = ", ".join(placeholders)
+        update_values = tuple(values.values())
+        statement = f"UPDATE {table_name} SET {updates}"
+        statement += f" WHERE {update_criteria}"
+        self._execute(statement, update_values + criteria_values)
 
     def select(self,
                table_name,
